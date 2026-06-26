@@ -1,0 +1,41 @@
+---
+description: Go backend layer conventions for rashnu domains
+globs: "{cmd/**/*.go,internal/**/*.go}"
+alwaysApply: false
+---
+
+# Go backend structure
+
+Each domain under `internal/<domain>/` follows this layout:
+
+```
+types.go              # entities + json/db tags
+dto.go                # Create/Update request structs
+errors.go             # sentinel errors (errors.New), Is* helpers
+service.go            # business logic; uuid.NewV7() for IDs
+postgres_repository.go # SQL via pgxpool; column consts + scan helpers
+```
+
+Optional: `prometheus_*.go` in service_catalog only.
+
+## Layer rules
+
+- **Service** — validation, UUID generation, maps DTO → entity, calls repo. Log `Debug` on entry, `Error` on failure.
+- **Repository** — SQL only; no HTTP. Use `pgx.CollectRows` + scan funcs. Map `pgconn` unique violations to domain `ErrDuplicate*`.
+- **API** (`internal/api/`) — decode JSON → DTO, call service interface, `writeJSON` or `http.Error`. Map `errors.Is(err, domain.Err*)` to 404/409/400.
+- **Handler wiring** — service interfaces declared on `Handler` in `handler.go`; implementations injected in `main.go`.
+
+## Conventions
+
+- `context.Context` first param on service/repo methods.
+- IDs: `github.com/google/uuid` v7 for creates.
+- Logger: `go.uber.org/zap` passed from constructor.
+- Cross-domain reads: small `XxxReader` interfaces (see `cost_report.CatalogReader`), not direct repo imports across packages.
+- Migrations: numbered pairs in `migrations/NNNNNN_name.{up,down}.sql`; never edit applied migrations—add new ones.
+
+## Adding a feature checklist
+
+1. Migration if schema changes.
+2. `types.go` / `dto.go` / `errors.go`.
+3. Repository method → service method → handler + route in `handler.go`.
+4. Register repo/service in `cmd/server/main.go`.

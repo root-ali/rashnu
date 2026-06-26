@@ -1,0 +1,7 @@
+database:
+  host: 172.30.0.1
+  port: 5433
+  db: rashnu
+  user: rashnu
+  pass: rashnu
+  

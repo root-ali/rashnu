@@ -1,0 +1,16 @@
+/http-client.private.env.json
+/frontend/dist/
+/frontend/node_modules/
+./.env
+.idea/
+.vscode/
+bin/
+/server
+.claude/
+/Makefile
+/rashnu.http
+/cmd/tools/rashnu_k8s_importer/
+/cmd/tools/rashnu_vm_importer/
+/internal/k8s_importer/
+/internal/vm_importer/
+/cost_calculation_analysis.md

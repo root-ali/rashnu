@@ -1,0 +1,35 @@
+---
+description: React/TypeScript frontend conventions for rashnu
+globs: "frontend/**/*.{ts,tsx,css}"
+alwaysApply: false
+---
+
+# Frontend structure
+
+```
+frontend/src/lib/api.ts       # sole HTTP client; Backend* types; JWT in localStorage
+frontend/src/lib/types.ts     # UI domain types (DataCenter, Asset, Service, …)
+frontend/src/lib/mappers.ts   # Backend* ↔ UI type conversion
+frontend/src/state/useAppState.ts  # auth, CRUD, derived costs, toasts
+frontend/src/pages/*.tsx      # route pages
+frontend/src/components/      # ui.tsx, charts.tsx, icons.tsx
+```
+
+Vite dev server proxies `/api` → backend `:9090`. Tailwind v4 via `@tailwindcss/vite`.
+
+## Conventions
+
+- **All API calls** go through `api.ts` — never `fetch` in pages/components.
+- **Backend snake_case** stays in `api.ts`; UI camelCase lives in `types.ts`; bridge in `mappers.ts`.
+- **State** — add CRUD to `useAppState.ts`; pages consume hook, not raw API.
+- **Components** — functional React 18; no extra state libs.
+- **Styling** — Tailwind utility classes; shared primitives in `components/ui.tsx`.
+
+## Adding a UI feature
+
+1. Add `Backend*` type + `*Api` function in `api.ts`.
+2. Add mapper(s) in `mappers.ts` if shape differs from UI types.
+3. Wire into `useAppState.ts` if user-facing CRUD.
+4. Build page/section in `pages/` or extend existing page.
+
+Match existing patterns in `Reports.tsx`, `DataCenters.tsx` for tables/forms.

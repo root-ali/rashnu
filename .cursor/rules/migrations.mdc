@@ -1,0 +1,20 @@
+---
+description: Database migration conventions for rashnu
+globs: "migrations/**"
+alwaysApply: false
+---
+
+# Migrations
+
+- Location: `migrations/`. Format: `NNNNNN_description.up.sql` + matching `.down.sql`.
+- Next version: one higher than the highest existing `NNNNNN`.
+- Embedded at runtime via `migrations/embed.go`; applied with `make migrate-up` (golang-migrate).
+- **Never modify** migrations already applied in shared environments—add a new migration instead.
+
+## SQL style
+
+- `uuid` PKs, `timestamptz` for timestamps, `jsonb` for flexible specs (see `infrastructure_hardwares.specs`).
+- Snake_case table/column names matching Go `db` tags in `types.go`.
+- Add indexes for FKs and common filters. Name constraints explicitly when non-obvious.
+
+After schema change, update the matching `postgres_repository.go` column consts and scan functions in the same PR.

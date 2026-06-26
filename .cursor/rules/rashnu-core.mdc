@@ -1,0 +1,33 @@
+---
+description: Rashnu architecture index and token-efficient navigation
+alwaysApply: true
+---
+
+# Rashnu — core context
+
+FinOps platform for bare-metal infrastructure: inventory, pricing, service catalog, cost reports. Go backend (`cmd/server`, `internal/*`) + React/Vite frontend (`frontend/`). Module: `github.com/root-ali/rashnu`.
+
+## Domain map (read only what you touch)
+
+| Domain | Package | API handlers | DB tables (see migrations) |
+|--------|---------|--------------|----------------------------|
+| Inventory | `internal/inventory` | `internal/api/inventory.go` | datacenters, servers, infrastructure_hardwares |
+| Pricing | `internal/pricing` | `internal/api/pricing.go` | prices, daily_prices |
+| Identity | `internal/identity` | `internal/api/identity.go` | users |
+| Service catalog | `internal/service_catalog` | `internal/api/service_catalog.go` | services, workloads |
+| Cost reports | `internal/cost_report` | `internal/api/cost_report.go` | service_cost_reports* |
+| Config | `internal/config` | — | prometheus_config |
+
+Wiring: `cmd/server/main.go`. Routes: `Handler.Router()` in `internal/api/handler.go`. API examples: `rashnu.http`.
+
+## Token discipline
+
+1. **Scope reads** — For domain `X`, read `internal/X/{types,dto,errors,service,postgres_repository}.go` and `internal/api/X.go` only. Do not scan unrelated packages.
+2. **Grep before explore** — Find symbols with `rg`, not broad semantic search.
+3. **Skip noise** — Never read `node_modules/`, `frontend/dist/`, `.idea/`, `coverage.out`, `go.sum`.
+4. **Minimal diffs** — Change the smallest surface; extend existing types/handlers, don't restructure.
+5. **No drive-by refactors** — Match naming, logging (`zap`), and error patterns in the file you edit.
+
+## Dev commands
+
+`make dev` (FE+BE), `make migrate-up`, `make build`, `make test-unit`. DB: `config.yaml` / `DATABASE_URL` in Makefile.

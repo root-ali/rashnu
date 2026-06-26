@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+  # ── rashnu API ─────────────────────────────────────────────────────────────
+  rashnu:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://rashnu:rashnu@postgres:5433/rashnu?sslmode=disable
+      PROMETHEUS_URL: http://prometheus:9090
+      PORT: "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - rashnu
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rashnu
+      POSTGRES_PASSWORD: rashnu
+      POSTGRES_DB: rashnu
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rashnu"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rashnu
+
+  # ── Prometheus ────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=90d"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - rashnu
+
+volumes:
+  pgdata:
+  promdata:
+
+networks:
+  rashnu:
+    driver: bridge
